@@ -2,90 +2,118 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
 
 namespace CategoriseUsingSVM
 {
-    public class Document
-    {
-        public string Path;
-        public bool[] Vector;
-        public Point Position;
-        public string Category;
-
-        public Document(string path, bool[] vector)
-        {
-            Path = path;
-            Vector = vector;
-            var count = vector.Count() / 2;
-            if (vector.Count() % 2 == 1)
-                count++;
-            Position = new Point(SumOfElementLessThan(vector, count),
-                                 SumOfElementMoreThanAndEqual(vector, count));
-        }
-
-        private int SumOfElementLessThan(bool[] vector, int count)
-        {
-            int sum = 0;
-            for (int iter = 0; iter < count; iter++)
-                if (vector[iter])
-                    sum += (int)Math.Pow(2, iter);
-            return sum;
-        }
-
-        private int SumOfElementMoreThanAndEqual(bool[] vector, int count)
-        {
-            int sum = 0;
-            for (int iter = count; iter < vector.Count(); iter++)
-                if (vector[iter])
-                    sum += (int)Math.Pow(2, iter - count);
-            return sum;
-        }
-    }
-
     public class DocumentAnalyzer
     {
         public List<string> Dictionary;
+        public byte[] ReferenceVector;
         public List<Document> Documents;
-
-        public DocumentAnalyzer()
-        {
-            Dictionary = new List<string> ();
-            Documents = new List<Document> ();
-        }
 
         public DocumentAnalyzer(string[] dictionary)
         {
             Dictionary = new List<string>(dictionary);
             Documents = new List<Document>();
+            ReferenceVector = new byte[dictionary.Count()];
+            for (int i = 0; i < dictionary.Count(); i++)
+                ReferenceVector[i] = 1;
         }
 
-        public DocumentAnalyzer(string[] dictionary, string[] files)
+        public DocumentAnalyzer(string[] dictionary, string referenceFile)
         {
             Dictionary = new List<string>(dictionary);
             Documents = new List<Document>();
+            ReferenceVector = ComputeVector(referenceFile);
+        }
+
+        public DocumentAnalyzer(string[] dictionary, byte[] referenceVector)
+        {
+            Dictionary = new List<string>(dictionary);
+            Documents = new List<Document>();
+            ReferenceVector = referenceVector;
+        }
+
+        public DocumentAnalyzer(string[] dictionary, string referenceFile, string[] files)
+        {
+            Dictionary = new List<string>(dictionary);
+            Documents = new List<Document>();
+            ReferenceVector = ComputeVector(referenceFile);
             foreach (var file in files)
                 AddNewDocument(file);
         }
 
-        public bool AddNewDocument(string path)
+        public DocumentAnalyzer(string[] dictionary, byte[] referenceVector, string[] files)
+        {
+            Dictionary = new List<string>(dictionary);
+            Documents = new List<Document>();
+            ReferenceVector = referenceVector;
+            foreach (var file in files)
+                AddNewDocument(file);
+        }
+
+        public void AddNewDocument(string path)
         {
             path = path.Trim();
             foreach (var document in Documents)
                 if (path == document.Path)
-                    return false;
-            Documents.Add(new Document(path, CountVector(path)));
-            return true;
+                    return;
+            var vector = ComputeVector(path);
+            var similarity = ComputeSimilatrity(vector);
+            var distance = ComputeDistance(similarity);
+            var position = ComputePosition(distance, similarity);
+            Documents.Add(new Document()
+            {
+                Path = path,
+                Vector = vector,
+                Similarity = similarity,
+                Distance = distance,
+                Position = position
+            });
         }
 
-        private bool[] CountVector(string path)
+        private byte[] ComputeVector(string path)
         {
-            var vector = new bool[Dictionary.Count];
+            var vector = new byte[Dictionary.Count];
             var data = File.ReadAllText(path);
             for (var iter = 0; iter < Dictionary.Count; iter++)
                 if (data.IndexOf(Dictionary[iter]) >= 0)
-                    vector[iter] = true;
+                    vector[iter] = 1;
+                else
+                    vector[iter] = 0;
             return vector;
+        }
+
+        private double ComputeSimilatrity(byte[] vector)
+        {
+            var count = ReferenceVector.Count();
+            if (count != vector.Count())
+                throw new FormatException("Length of vectors are different. Should be the same.");
+            var sum = 0;
+            for (int i = 0; i < count; i++)
+                sum += ReferenceVector[i] * vector[i];
+            var sumOfA = 0;
+            var sumOfB = 0;
+            for (int i = 0; i < count; i++)
+            {
+                sumOfA += ReferenceVector[i] * ReferenceVector[i];
+                sumOfB += vector[i] * vector[i];
+            }
+            return sum / (Math.Sqrt(sumOfA) * Math.Sqrt(sumOfB));
+        }
+
+        private double ComputeDistance(double similarity)
+        {
+            return Math.Acos(similarity) / Math.PI;
+        }
+
+        private Position ComputePosition(double distance, double similarity)
+        {
+            return new Position()
+            {
+                X = distance * similarity,
+                Y = Math.Sqrt(distance * distance - (similarity * distance) * (similarity * distance))
+            };
         }
     }
 }

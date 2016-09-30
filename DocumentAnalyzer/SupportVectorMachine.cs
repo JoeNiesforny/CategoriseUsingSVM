@@ -8,7 +8,7 @@ namespace CategoriseUsingSVM
 {
     public class SupportVectorMachine
     {
-        // ToDo - Should poses a function to categorise document on the plane.
+        // ToDo - Should poses a function to categorise documents.
         // Need to create an idea how to do it.
     }
 }

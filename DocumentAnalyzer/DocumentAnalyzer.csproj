@@ -69,6 +69,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Document.cs" />
     <Compile Include="DocumentAnalyzer.cs" />
     <Compile Include="HTMLtoTXT.cs" />
     <Compile Include="SupportVectorMachine.cs" />
