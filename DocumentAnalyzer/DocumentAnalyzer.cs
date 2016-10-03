@@ -116,7 +116,7 @@ namespace CategoriseUsingSVM
             };
         }
 
-        public Element[] GetLearningSet(double condition_high = 0.6, double condition_low = 0.4)
+        public Element[] GetLearningSet(double condition_high = 0.55, double condition_low = 0.45)
         {
             List<Element> learningSet = new List<Element>();
             foreach (var doc in Documents)

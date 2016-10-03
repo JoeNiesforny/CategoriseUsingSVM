@@ -1,18 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SVMApp
 {
@@ -38,11 +26,15 @@ namespace SVMApp
 
         private void loadLearningSetButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            if (result == System.Windows.Forms.DialogResult.OK)
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.ValidateNames = false;
+            dlg.CheckFileExists = false;
+            dlg.CheckPathExists = true;
+            dlg.FileName = "Folder Selection";
+            bool? result = dlg.ShowDialog();
+            if (result == true)
             {
-                string[] files = GetAllFilesFromRecursivly(dialog.SelectedPath);
+                string[] files = GetAllFilesFromRecursivly(dlg.FileName.Replace("Folder Selection", ""));
                 model.LoadLearningSet(files);
                 learningSetDataGrid.ItemsSource = model.LearningSetTable.DefaultView;
             }
@@ -52,7 +44,7 @@ namespace SVMApp
         {
             model.ComputeClassificator();
             vectorDataGrid.ItemsSource = model.ClassificatorVectorTable.DefaultView;
-            resultLabel.Content = resultLabel.Content.ToString().Replace("b = 0", "b = " + model.ClassificatorB);
+            classificationBLabel.Content = model.ClassificatorB.ToString();
         }
 
         private void classifyNewDocumentButton_Click(object sender, RoutedEventArgs e)
@@ -60,7 +52,7 @@ namespace SVMApp
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             bool? result = dlg.ShowDialog();
             if (result == true)
-                classifyNewDocumentButton.Content = "Document class is " + model.ClassifyDocument(dlg.FileName);
+                MessageBox.Show("Document class is " + model.ClassifyDocument(dlg.FileName));
         }
         private static string[] GetAllFilesFromRecursivly(string targetDirectory)
         {

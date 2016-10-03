@@ -1,11 +1,8 @@
 ﻿using CategoriseUsingSVM;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SVMApp
 {
@@ -38,6 +35,8 @@ namespace SVMApp
 
         public void LoadLearningSet(string[] documents)
         {
+            if (_DocumentAnalyzer == null)
+                _DocumentAnalyzer = new DocumentAnalyzer(_Dictionary);
             foreach (var doc in documents)
                 _DocumentAnalyzer.AddNewDocument(doc);
             _LearningSet = _DocumentAnalyzer.GetLearningSet();
