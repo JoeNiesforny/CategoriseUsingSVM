@@ -55,13 +55,11 @@ namespace CategoriseUsingSVM
             // number of elements in learning sets.
             int len = learningSet[0].Vector.Count(); // number of elements in vector.
             int num = learningSet.Count();
-            double[] alfa = new double[len];
+            double[] alfa = new double[num];
+            for (int i = 0; i < num; i++)
+                alfa[i] = 0;
             // Idea is to compute direction search for alfa vector.
             // new alfa = previous alfa + step length * moving direction
-            // (optional)
-            // Condition to end iteration is
-            // y(i)*y$(x(i)) >= 1
-            // y$ - (classificator function)
             while (B.Count != 0)
             {
                 double[] g = new double[num];
@@ -78,7 +76,7 @@ namespace CategoriseUsingSVM
                 do
                 {
                     // Setting elements of vector u to 0 if position of element is higher than count of set B.
-                    for (int i = B.Count - 1; i < num; i++)
+                    for (int i = B.Count; i < num; i++)
                         u[i] = 0;
                     BCount = B.Count;
                     // Counting mean of vector y multiply g.
@@ -93,11 +91,11 @@ namespace CategoriseUsingSVM
                     double sum = 0;
                     for (int i = 0; i < num; i++)
                         sum += learningSet[i].Class * u[i];
-                    if (sum != 0)
+                    if (Math.Round(sum, 8) != 0)
                         throw new Exception("Condition \"sum of (u(k)*y(k)) == 0\" is broken!");
                     // Remove unnecessary element from set B.
                     for (int i = 0; i < B.Count; i++)
-                        if ((u[i] > 0) || (u[i] < 0 && alfa[i] == 0))
+                        if ((u[i] < 0 && Math.Round(alfa[i], 8) == 0) || (u[i] > 0 && alfa[i] >= 1)) // ToDo : change condition of alfa[i] >= 1
                         {
                             B.RemoveAt(i);
                             i--;
@@ -105,14 +103,20 @@ namespace CategoriseUsingSVM
                 }
                 while (BCount != B.Count); // Condition that check if set B is still changing.
                 // If u == 0 then break loop.
+                var breakLoop = false;
                 for (int i = 0; i < num; i++)
                     if (u[i] == 0)
+                    {
+                        breakLoop = true;
                         break;
+                    }
+                if (breakLoop)
+                    break;
                 // Computing new lambda
                 double[,] H = new double[num, num];
                 for (int i = 0; i < num; i++)
                     for (int j = 0; j < num; j++)
-                        H[i, j] = ComputeLambda(learningSet[i], learningSet[j]);// learningSet[i].Class * learningSet[j].Class * VectorMultiply(learningSet[i].Vector, learningSet[j].Vector);
+                        H[i, j] = ComputeLambda(learningSet[i], learningSet[j]);
                 double[] tmp = new double[num];
                 for (int i = 0; i < num; i++)
                     for (int j = 0; j < num; j++)
@@ -133,6 +137,7 @@ namespace CategoriseUsingSVM
                     sum += alfa[j] * learningSet[j].Class * learningSet[j].Vector[i];
                 Classificator.Vector[i] = sum;
             }
+            // b should be compute by margin point of the learning set.
             Classificator.b = learningSet[0].Class - VectorMultiply(Classificator.Vector, learningSet[0].Vector);
         } // End of ComputeClassificator.
 
