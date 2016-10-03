@@ -87,12 +87,13 @@ namespace CategoriseUsingSVM
                     // Computing new values for vector u.
                     for (int i = 0; i < BCount; i++)
                         u[i] = g[i] - learningSet[i].Class * p;
-                    // Condition to check if sum of (u(k)*y(k)) == 0
-                    double sum = 0;
-                    for (int i = 0; i < num; i++)
-                        sum += learningSet[i].Class * u[i];
-                    if (Math.Round(sum, 8) != 0)
-                        throw new Exception("Condition \"sum of (u(k)*y(k)) == 0\" is broken!");
+                    // (optional)
+                    //// Condition to check if sum of (u(k)*y(k)) == 0
+                    //double sum = 0;
+                    //for (int i = 0; i < num; i++)
+                    //    sum += learningSet[i].Class * u[i];
+                    //if (Math.Round(sum, 8) != 0)
+                    //    throw new Exception("Condition \"sum of (u(k)*y(k)) == 0\" is broken!");
                     // Remove unnecessary element from set B.
                     for (int i = 0; i < B.Count; i++)
                         if ((u[i] < 0 && Math.Round(alfa[i], 8) == 0) || (u[i] > 0 && alfa[i] >= 1)) // ToDo : change condition of alfa[i] >= 1

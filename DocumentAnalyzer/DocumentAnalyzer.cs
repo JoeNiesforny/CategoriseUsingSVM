@@ -72,7 +72,7 @@ namespace CategoriseUsingSVM
             });
         }
 
-        private byte[] ComputeVector(string path)
+        public byte[] ComputeVector(string path)
         {
             var vector = new byte[Dictionary.Count];
             var data = File.ReadAllText(path);
@@ -114,6 +114,30 @@ namespace CategoriseUsingSVM
                 X = distance * similarity,
                 Y = Math.Sqrt(distance * distance - (similarity * distance) * (similarity * distance))
             };
+        }
+
+        public Element[] GetLearningSet(double condition_high = 0.6, double condition_low = 0.4)
+        {
+            List<Element> learningSet = new List<Element>();
+            foreach (var doc in Documents)
+            {
+                var category = 0;
+                if (doc.Similarity > condition_high)
+                    category = 1;
+                else
+                    if (doc.Similarity <= condition_low)
+                        category = -1;
+                    else
+                        continue;
+                var lengthOfVector = doc.Vector.Count();
+                var newElement = new Element();
+                newElement.Class = category;
+                newElement.Vector = new double[lengthOfVector];
+                for (int j = 0; j < lengthOfVector; j++)
+                    newElement.Vector[j] = doc.Vector[j];
+                learningSet.Add(newElement);
+            }
+            return learningSet.ToArray();
         }
     }
 }
